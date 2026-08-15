@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>CUBEX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="mode-play">
+  <div id="app">
+    <header>
+      <div class="brand">
+        <div class="mark">CUBEX<span>.</span></div>
+      </div>
+      <div class="badge" id="camera-hint">WASD 시점이동 · Space 시계방향회전</div>
+    </header>
+
+    <div id="mode-toggle">
+      <button class="mode-btn active" id="mode-play-btn" data-mode="play">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9h.01M15 9h.01M8 15c1 1.2 2.4 2 4 2s3-.8 4-2"/></svg>
+        <span>놀이 모드</span>
+      </button>
+      <button class="mode-btn" id="mode-timeattack-btn" data-mode="timeattack">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M9 2h6M12 2v3"/></svg>
+        <span>타임어택</span>
+      </button>
+    </div>
+
+    <div id="canvas-wrap"></div>
+
+    <div id="hint">W/A/S/D: 시점 이동 · Space: 화면 회전 · 드래그: 층 회전 / 자유 시점(놓으면 정면 스냅)</div>
+
+    <div id="console">
+      <div class="readout timer">
+        <div class="label">Time</div>
+        <div class="value" id="timer-value">00:00.0</div>
+      </div>
+      <div class="readout moves">
+        <div class="label">Moves</div>
+        <div class="value" id="moves-value">0</div>
+      </div>
+      <div class="readout best">
+        <div class="label">Best</div>
+        <div class="value" id="best-value">--:--.-</div>
+      </div>
+    </div>
+
+    <div id="controls">
+      <button class="ctrl" id="undo-btn" title="실행 취소" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+        <span class="label">실행취소</span>
+      </button>
+      <button class="ctrl" id="pause-btn" title="일시정지">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="4" x2="8" y2="20"/><line x1="16" y1="4" x2="16" y2="20"/></svg>
+        <span class="label">일시정지</span>
+      </button>
+      <button class="ctrl" id="reset-btn" title="큐브 초기화">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+        <span class="label">리셋</span>
+      </button>
+      <button class="ctrl primary" id="scramble-btn" title="큐브 섞기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg>
+        <span class="label">섞기</span>
+      </button>
+    </div>
+
+    <div id="pause-overlay">
+      <div class="pause-card">
+        <svg class="pause-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="4" x2="8" y2="20"/><line x1="16" y1="4" x2="16" y2="20"/></svg>
+        <div class="pause-title">일시정지</div>
+        <div class="pause-sub">계속하려면 버튼을 누르세요</div>
+        <button class="ctrl primary" id="resume-btn">계속하기</button>
+      </div>
+    </div>
+
+    <div id="win-overlay">
+      <div class="win-card">
+        <div class="title">SOLVED</div>
+        <div class="sub" id="win-sub">큐브를 맞췄습니다</div>
+        <div class="win-badge" id="win-badge">🏆 신기록!</div>
+        <div class="win-stats">
+          <div><div class="n" id="win-time">00:00.0</div><div class="l">Time</div></div>
+          <div><div class="n" id="win-moves">0</div><div class="l">Moves</div></div>
+        </div>
+        <button class="ctrl primary" id="win-again-btn">다시 섞기</button>
+      </div>
+    </div>
+  </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

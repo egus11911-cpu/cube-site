@@ -1,0 +1,444 @@
+:root{
+  /* ---- 놀이 모드(기본): 따뜻하고 여유로운 톤 ---- */
+  --bg: #f5f2eb;
+  --panel: #ffffff;
+  --panel-2: #eae4da;
+  --border: #d4cec3;
+  --text: #2c2925;
+  --muted: #6e675f;
+  --accent: #e05a30;
+  --accent2: #1d6fa5;
+  --blob1: rgba(224,90,48,0.20);
+  --blob2: rgba(29,111,165,0.16);
+  --dot-color: rgba(44,41,37,0.08);
+  --badge-bg: rgba(255,255,255,0.85);
+  --win-bg: rgba(245,242,235,0.85);
+  --value-glow: none;
+
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* ---- 타임어택 모드: 긴장감 있는 다크 + 네온 톤 ---- */
+body.mode-timeattack{
+  --bg: #0f1115;
+  --panel: #171a21;
+  --panel-2: #1d212b;
+  --border: #2a2f3b;
+  --text: #f2f1ec;
+  --muted: #8a8f9c;
+  --accent: #ff5d2e;
+  --accent2: #2fe6d9;
+  --blob1: rgba(255,93,46,0.22);
+  --blob2: rgba(47,230,217,0.18);
+  --dot-color: rgba(255,255,255,0.06);
+  --badge-bg: rgba(23,26,33,0.75);
+  --win-bg: rgba(15,17,21,0.82);
+  --value-glow: 0 0 14px currentColor;
+}
+
+*{ box-sizing: border-box; }
+
+html, body{
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  transition: background 0.4s ease, color 0.4s ease;
+}
+
+/* 은은하게 떠다니는 색상 블롭 두 개로 배경에 깊이감을 준다 */
+body::before,
+body::after{
+  content: "";
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(90px);
+  z-index: 0;
+  pointer-events: none;
+  transition: background 0.4s ease;
+}
+body::before{
+  width: 520px;
+  height: 520px;
+  top: -140px;
+  left: -120px;
+  background: radial-gradient(circle, var(--blob1), transparent 70%);
+  animation: driftA 24s ease-in-out infinite alternate;
+}
+body::after{
+  width: 620px;
+  height: 620px;
+  bottom: -180px;
+  right: -160px;
+  background: radial-gradient(circle, var(--blob2), transparent 70%);
+  animation: driftB 28s ease-in-out infinite alternate;
+}
+@keyframes driftA{
+  0%{ transform: translate(0, 0) scale(1); }
+  100%{ transform: translate(70px, 50px) scale(1.08); }
+}
+@keyframes driftB{
+  0%{ transform: translate(0, 0) scale(1); }
+  100%{ transform: translate(-60px, -40px) scale(1.06); }
+}
+
+#app{
+  position: relative;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* 은은한 격자 도트 패턴으로 바탕에 질감을 더한다 */
+#app::before{
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(var(--dot-color) 1px, transparent 1.5px);
+  background-size: 28px 28px;
+  z-index: 0;
+  pointer-events: none;
+  transition: background-image 0.4s ease;
+}
+
+header{
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 22px 26px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.brand{
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.brand .mark{
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: 0.5px;
+}
+.brand .mark span{ color: var(--accent); }
+
+.badge{
+  pointer-events: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 12px;
+  background: var(--badge-bg);
+  backdrop-filter: blur(6px);
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+/* ---------- 모드 전환 토글 ---------- */
+#mode-toggle{
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  gap: 4px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+}
+
+.mode-btn{
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.mode-btn svg{ width: 14px; height: 14px; }
+.mode-btn:hover{ color: var(--text); }
+.mode-btn.active{
+  background: var(--accent);
+  color: #ffffff;
+}
+
+#canvas-wrap{
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+  cursor: grab;
+  z-index: 1;
+}
+#canvas-wrap.grabbing{ cursor: grabbing; }
+#canvas-wrap canvas{ display: block; }
+
+#console{
+  position: absolute;
+  left: 26px;
+  bottom: 26px;
+  z-index: 10;
+  display: flex;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.readout{
+  pointer-events: auto;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 16px;
+  min-width: 108px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease,
+              background 0.3s ease;
+}
+.readout::after{
+  content:"";
+  position: absolute;
+  top:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0.7;
+}
+.readout .label{
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.readout .value{
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--accent2);
+  letter-spacing: 1px;
+  text-shadow: var(--value-glow);
+}
+.readout.moves .value{ color: var(--accent); }
+.readout.best .value{ color: var(--accent); font-size: 18px; }
+
+/* Best 기록은 타임어택 모드에서만 노출 */
+.readout.best{ display: none; }
+body.mode-timeattack .readout.best{ display: block; }
+
+/* ---------- 임팩트: 이동할 때마다 카운터가 살짝 튕기는 효과 ---------- */
+.readout.pulse{
+  animation: readoutPulse 0.32s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes readoutPulse{
+  0%{ transform: scale(1); }
+  35%{ transform: scale(1.12); border-color: var(--accent); }
+  100%{ transform: scale(1); }
+}
+
+#controls{
+  position: absolute;
+  right: 26px;
+  bottom: 26px;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  max-width: 70vw;
+}
+
+button.ctrl{
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+  transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+button.ctrl:hover{ border-color: var(--accent); background: var(--panel); }
+button.ctrl:active{ transform: translateY(1px) scale(0.96); }
+button.ctrl.primary{
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+button.ctrl.primary:hover{ filter: brightness(1.08); }
+button.ctrl:disabled{ opacity: 0.4; cursor: default; }
+button.ctrl svg{ width: 15px; height: 15px; }
+
+#hint{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, 120px);
+  z-index: 5;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+  text-align: center;
+  pointer-events: none;
+  white-space: nowrap;
+  opacity: 0.8;
+}
+
+/* ---------- 일시정지 오버레이 ---------- */
+#pause-overlay{
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--win-bg);
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+#pause-overlay.show{ opacity: 1; pointer-events: auto; }
+
+.pause-card{
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.pause-icon{
+  width: 46px;
+  height: 46px;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+.pause-title{
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 26px;
+}
+.pause-sub{
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+  margin-bottom: 18px;
+}
+
+#win-overlay{
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--win-bg);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease, background 0.3s ease;
+}
+#win-overlay.show{ opacity: 1; pointer-events: auto; }
+
+.win-card{
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  border-radius: 16px;
+  padding: 36px 44px;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+  transform: translateY(14px) scale(0.92);
+  /* 임팩트: 살짝 튕기며 등장하는 back-ease */
+  transition: transform 0.5s cubic-bezier(.34,1.56,.64,1);
+}
+#win-overlay.show .win-card{ transform: translateY(0) scale(1); }
+
+.win-card .title{
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 30px;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.win-card .sub{
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 8px;
+}
+.win-badge{
+  display: none;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+.win-badge.show{ display: block; animation: readoutPulse 0.5s cubic-bezier(.34,1.56,.64,1); }
+
+.win-stats{
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+.win-stats div .n{
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+}
+.win-stats div .l{
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+@media (max-width: 640px){
+  #console{ left: 14px; bottom: 14px; }
+  #controls{ right: 14px; bottom: 14px; max-width: 60vw; }
+  .readout{ min-width: 84px; padding: 8px 12px; }
+  .readout .value{ font-size: 17px; }
+  .readout.best .value{ font-size: 15px; }
+  button.ctrl{ padding: 10px 14px; font-size: 12px; }
+  button.ctrl span.label{ display: none; }
+  header{ padding: 16px; }
+  #hint{ display: none; }
+  #mode-toggle{ top: 14px; padding: 3px; }
+  .mode-btn{ padding: 7px 10px; font-size: 11px; }
+  .mode-btn span{ display: none; }
+}
