@@ -14,7 +14,9 @@
       <div class="brand">
         <div class="mark">CUBEX<span>.</span></div>
       </div>
-      <div class="badge" id="camera-hint">WASD 시점이동 · Space 시계방향회전</div>
+      <button class="icon-btn" id="pause-btn" title="일시정지">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="4" x2="8" y2="20"/><line x1="16" y1="4" x2="16" y2="20"/></svg>
+      </button>
     </header>
 
     <div id="mode-toggle">
@@ -30,35 +32,38 @@
 
     <div id="canvas-wrap"></div>
 
-    <div id="hint">W/A/S/D: 시점 이동 · Space: 화면 회전 · 드래그: 층 회전 / 자유 시점(놓으면 정면 스냅)</div>
+    <button class="roll-btn roll-left" id="roll-ccw-btn" title="화면 반시계방향 회전 (Shift+Space)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+    </button>
+    <button class="roll-btn roll-right" id="roll-cw-btn" title="화면 시계방향 회전 (Space)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+    </button>
 
     <div id="console">
-      <div class="readout timer">
-        <div class="label">Time</div>
-        <div class="value" id="timer-value">00:00.0</div>
-      </div>
-      <div class="readout moves">
-        <div class="label">Moves</div>
-        <div class="value" id="moves-value">0</div>
-      </div>
       <div class="readout best">
         <div class="label">Best</div>
         <div class="value" id="best-value">--:--.-</div>
       </div>
+      <div class="console-row">
+        <div class="readout timer">
+          <div class="label">Time</div>
+          <div class="value" id="timer-value">00:00.0</div>
+        </div>
+        <div class="readout moves">
+          <div class="label">Moves</div>
+          <div class="value" id="moves-value">0</div>
+        </div>
+      </div>
     </div>
 
     <div id="controls">
-      <button class="ctrl" id="undo-btn" title="실행 취소" disabled>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
-        <span class="label">실행취소</span>
-      </button>
-      <button class="ctrl" id="pause-btn" title="일시정지">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="4" x2="8" y2="20"/><line x1="16" y1="4" x2="16" y2="20"/></svg>
-        <span class="label">일시정지</span>
-      </button>
       <button class="ctrl" id="reset-btn" title="큐브 초기화">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
         <span class="label">리셋</span>
+      </button>
+      <button class="ctrl" id="undo-btn" title="실행 취소" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+        <span class="label">실행취소</span>
       </button>
       <button class="ctrl primary" id="scramble-btn" title="큐브 섞기">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg>

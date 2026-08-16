@@ -14,6 +14,7 @@
   --badge-bg: rgba(255,255,255,0.85);
   --win-bg: rgba(245,242,235,0.85);
   --value-glow: none;
+  --panel-alpha: rgba(255,255,255,0.42);
 
   --font-display: 'Space Grotesk', sans-serif;
   --font-body: 'Inter', sans-serif;
@@ -36,6 +37,7 @@ body.mode-timeattack{
   --badge-bg: rgba(23,26,33,0.75);
   --win-bg: rgba(15,17,21,0.82);
   --value-glow: 0 0 14px currentColor;
+  --panel-alpha: rgba(23,26,33,0.4);
 }
 
 *{ box-sizing: border-box; }
@@ -134,18 +136,26 @@ header{
 }
 .brand .mark span{ color: var(--accent); }
 
-.badge{
+/* ---------- 헤더의 아이콘 버튼 (일시정지) ---------- */
+.icon-btn{
   pointer-events: auto;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--muted);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 6px 12px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: var(--badge-bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
   backdrop-filter: blur(6px);
-  transition: background 0.3s ease, border-color 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  transition: background 0.3s ease, border-color 0.15s ease, color 0.15s ease, transform 0.12s ease;
 }
+.icon-btn svg{ width: 17px; height: 17px; }
+.icon-btn:hover{ border-color: var(--accent); color: var(--accent); }
+.icon-btn:active{ transform: scale(0.92); }
 
 /* ---------- 모드 전환 토글 ---------- */
 #mode-toggle{
@@ -195,14 +205,53 @@ header{
 #canvas-wrap.grabbing{ cursor: grabbing; }
 #canvas-wrap canvas{ display: block; }
 
+/* ---------- 화면 회전(Space) 버튼: 화면 좌우 가장자리의 두 화살표 ---------- */
+.roll-btn{
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel-alpha);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  transition: transform 0.15s ease, border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.roll-btn:hover{ border-color: var(--accent); color: var(--accent); }
+.roll-btn:active{ transform: translateY(-50%) scale(0.9); }
+.roll-btn svg{ width: 25px; height: 25px; }
+.roll-left{ left: 18px; }
+.roll-right{ right: 18px; }
+
+@media (max-width: 640px){
+  .roll-btn{ width: 48px; height: 48px; }
+  .roll-btn svg{ width: 20px; height: 20px; }
+  .roll-left{ left: 10px; }
+  .roll-right{ right: 10px; }
+}
+
 #console{
   position: absolute;
   left: 26px;
   bottom: 26px;
   z-index: 10;
   display: flex;
+  flex-direction: column;
   gap: 10px;
   pointer-events: none;
+}
+
+.console-row{
+  display: flex;
+  gap: 10px;
 }
 
 .readout{
@@ -248,6 +297,9 @@ header{
 .readout.best{ display: none; }
 body.mode-timeattack .readout.best{ display: block; }
 
+/* 놀이 모드에서는 타이머를 숨긴다 (부담 없이 즐기는 모드이므로) */
+body.mode-play .readout.timer{ display: none; }
+
 /* ---------- 임팩트: 이동할 때마다 카운터가 살짝 튕기는 효과 ---------- */
 .readout.pulse{
   animation: readoutPulse 0.32s cubic-bezier(.34,1.56,.64,1);
@@ -263,12 +315,12 @@ body.mode-timeattack .readout.best{ display: block; }
   right: 26px;
   bottom: 26px;
   z-index: 10;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 10px;
   max-width: 70vw;
 }
+#controls #reset-btn{ grid-column: 1 / -1; justify-content: center; }
 
 button.ctrl{
   font-family: var(--font-body);
@@ -282,6 +334,7 @@ button.ctrl{
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.04);
   transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
@@ -295,23 +348,11 @@ button.ctrl.primary{
 }
 button.ctrl.primary:hover{ filter: brightness(1.08); }
 button.ctrl:disabled{ opacity: 0.4; cursor: default; }
+
+/* 타임어택 모드에서는 리셋(즉시 완성 상태로 되돌리기) 버튼을 숨긴다 */
+body.mode-timeattack #reset-btn{ display: none; }
 button.ctrl svg{ width: 15px; height: 15px; }
 
-#hint{
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, 120px);
-  z-index: 5;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--muted);
-  letter-spacing: 0.5px;
-  text-align: center;
-  pointer-events: none;
-  white-space: nowrap;
-  opacity: 0.8;
-}
 
 /* ---------- 일시정지 오버레이 ---------- */
 #pause-overlay{
@@ -437,7 +478,6 @@ button.ctrl svg{ width: 15px; height: 15px; }
   button.ctrl{ padding: 10px 14px; font-size: 12px; }
   button.ctrl span.label{ display: none; }
   header{ padding: 16px; }
-  #hint{ display: none; }
   #mode-toggle{ top: 14px; padding: 3px; }
   .mode-btn{ padding: 7px 10px; font-size: 11px; }
   .mode-btn span{ display: none; }

@@ -1,8 +1,8 @@
 (function(){
   "use strict";
 
-  const SPACING = 1.03;
-  const CUBIE_SIZE = 0.94;
+  const SPACING = 0.88;
+  const CUBIE_SIZE = 0.80;
   const DRAG_THRESHOLD = 0.32;
   const MOVE_DURATION = 80;
   const SCRAMBLE_DURATION = 40;
@@ -305,13 +305,13 @@
       solvedState = true;
       stopTimer();
       const finalMs = timerElapsed;
-      document.getElementById('win-time').textContent = formatTime(finalMs);
-      document.getElementById('win-moves').textContent = String(moveCount);
 
-      const badge = document.getElementById('win-badge');
-      const sub = document.getElementById('win-sub');
       if(currentMode === 'timeattack'){
-        sub.textContent = '타임어택 클리어';
+        document.getElementById('win-time').textContent = formatTime(finalMs);
+        document.getElementById('win-moves').textContent = String(moveCount);
+        document.getElementById('win-sub').textContent = '타임어택 클리어';
+
+        const badge = document.getElementById('win-badge');
         if(bestTime === null || finalMs < bestTime){
           bestTime = finalMs;
           document.getElementById('best-value').textContent = formatTime(bestTime);
@@ -319,12 +319,9 @@
         } else {
           badge.classList.remove('show');
         }
-      } else {
-        sub.textContent = '큐브를 맞췄습니다';
-        badge.classList.remove('show');
+        document.getElementById('win-overlay').classList.add('show');
       }
-
-      document.getElementById('win-overlay').classList.add('show');
+      // 놀이 모드에서는 완성해도 축하 팝업을 띄우지 않는다 (조용히 타이머만 멈춘다)
     }
   }
 
@@ -500,7 +497,13 @@
   }, { passive:false });
 
   window.addEventListener('keydown', (e) => {
-    if(e.repeat || isPaused) return;
+    if(e.repeat) return;
+    if(e.key === 'Escape'){
+      e.preventDefault();
+      togglePause();
+      return;
+    }
+    if(isPaused) return;
     if(e.code === 'Space'){
       e.preventDefault();
       rollView(e.shiftKey ? -1 : 1);
@@ -622,14 +625,11 @@
   function updatePauseButton(){
     const btn = document.getElementById('pause-btn');
     const svg = btn.querySelector('svg');
-    const label = btn.querySelector('.label');
     if(isPaused){
       svg.innerHTML = '<path d="M7 4v16l14-8z" fill="currentColor" stroke="none"/>';
-      label.textContent = '계속하기';
       btn.title = '계속하기';
     } else {
       svg.innerHTML = '<line x1="8" y1="4" x2="8" y2="20"/><line x1="16" y1="4" x2="16" y2="20"/>';
-      label.textContent = '일시정지';
       btn.title = '일시정지';
     }
   }
@@ -667,6 +667,8 @@
   document.getElementById('resume-btn').addEventListener('click', togglePause);
   document.getElementById('mode-play-btn').addEventListener('click', () => setMode('play'));
   document.getElementById('mode-timeattack-btn').addEventListener('click', () => setMode('timeattack'));
+  document.getElementById('roll-ccw-btn').addEventListener('click', () => { if(!isPaused) rollView(-1); });
+  document.getElementById('roll-cw-btn').addEventListener('click', () => { if(!isPaused) rollView(1); });
   document.getElementById('win-again-btn').addEventListener('click', () => {
     document.getElementById('win-overlay').classList.remove('show');
     scrambleCube();
