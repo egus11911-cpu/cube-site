@@ -124,8 +124,9 @@ header{
 
 .brand{
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
 }
 
 .brand .mark{
@@ -136,7 +137,7 @@ header{
 }
 .brand .mark span{ color: var(--accent); }
 
-/* ---------- 헤더의 아이콘 버튼 (일시정지) ---------- */
+/* ---------- 헤더의 아이콘 버튼 (일시정지, 게임 설명) ---------- */
 .icon-btn{
   pointer-events: auto;
   width: 38px;
@@ -157,20 +158,95 @@ header{
 .icon-btn:hover{ border-color: var(--accent); color: var(--accent); }
 .icon-btn:active{ transform: scale(0.92); }
 
+.help-btn{ width: 34px; height: 34px; }
+.help-btn svg{ width: 16px; height: 16px; }
+.help-btn.active{ background: var(--accent); border-color: var(--accent); color: #ffffff; }
+
+/* ---------- 게임 설명 오버레이 ---------- */
+#help-overlay{
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  pointer-events: none;
+}
+
+.help-tip{
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+body.show-help .help-tip{
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.tip-arrow{
+  width: 22px;
+  height: 22px;
+  color: #ffffff;
+  filter: drop-shadow(0 1px 4px rgba(0,0,0,0.5));
+}
+
+.tip-text{
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: center;
+  color: #ffffff;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(4px);
+  border-radius: 10px;
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+
+.tip-face{
+  top: 34%;
+  left: 50%;
+  transform: translate(-50%, 6px);
+}
+body.show-help .tip-face{ transform: translate(-50%, 0); }
+
+.tip-free{
+  top: 14%;
+  left: 18%;
+}
+.tip-free .tip-arrow{ transform: rotate(-35deg); }
+
+.tip-edge{
+  top: 50%;
+  right: 60px;
+  transform: translateY(-50%) translateX(6px);
+}
+body.show-help .tip-edge{ transform: translateY(-50%) translateX(0); }
+.tip-edge .tip-arrow{ transform: rotate(90deg); }
+
+.tip-scramble{
+  bottom: 190px;
+  right: 40px;
+}
+.tip-scramble .tip-arrow{ transform: rotate(180deg); }
+
+@media (max-width: 640px){
+  .tip-text{ font-size: 11px; white-space: normal; max-width: 150px; }
+  .tip-free{ left: 22%; top: 12%; }
+  .tip-edge{ right: 44px; }
+  .tip-scramble{ bottom: 230px; right: 20px; }
+}
+
 /* ---------- 모드 전환 토글 ---------- */
 #mode-toggle{
-  position: absolute;
-  top: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
   display: flex;
   gap: 4px;
-  background: var(--panel);
+  background: var(--panel-2);
   border: 1px solid var(--border);
   border-radius: 999px;
   padding: 4px;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.06);
 }
 
 .mode-btn{
@@ -206,43 +282,55 @@ header{
 #canvas-wrap canvas{ display: block; }
 
 /* ---------- 화면 회전(Space) 버튼: 화면 좌우 가장자리의 두 화살표 ---------- */
-.roll-btn{
+/* ---------- 화면 회전(Space) 버튼: 화면 좌우 가장자리의 하얀 반투명 선 ---------- */
+.roll-line{
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   z-index: 10;
-  width: 58px;
-  height: 58px;
-  border-radius: 50%;
+  width: 56px;
+  height: 220px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--panel-alpha);
-  backdrop-filter: blur(8px);
-  border: 1px solid var(--border);
-  color: var(--muted);
-  cursor: pointer;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
-  transition: transform 0.15s ease, border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
-.roll-btn:hover{ border-color: var(--accent); color: var(--accent); }
-.roll-btn:active{ transform: translateY(-50%) scale(0.9); }
-.roll-btn svg{ width: 25px; height: 25px; }
-.roll-left{ left: 18px; }
-.roll-right{ right: 18px; }
+.roll-line::before{
+  content: "";
+  display: block;
+  width: 6px;
+  height: 100%;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.4);
+  box-shadow: 0 0 10px rgba(255,255,255,0.15);
+  transition: background 0.15s ease, width 0.15s ease, box-shadow 0.15s ease;
+}
+.roll-line:hover::before{ background: rgba(255,255,255,0.65); width: 7px; }
+.roll-line:active::before{ background: rgba(255,255,255,0.85); }
+.roll-left{ left: 0; }
+.roll-right{ right: 0; }
 
 @media (max-width: 640px){
-  .roll-btn{ width: 48px; height: 48px; }
-  .roll-btn svg{ width: 20px; height: 20px; }
-  .roll-left{ left: 10px; }
-  .roll-right{ right: 10px; }
+  .roll-line{ width: 46px; height: 170px; }
+}
+
+#bottom-bar{
+  position: absolute;
+  left: 26px;
+  right: 26px;
+  bottom: 26px;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  pointer-events: none;
 }
 
 #console{
-  position: absolute;
-  left: 26px;
-  bottom: 26px;
-  z-index: 10;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -311,16 +399,13 @@ body.mode-play .readout.timer{ display: none; }
 }
 
 #controls{
-  position: absolute;
-  right: 26px;
-  bottom: 26px;
-  z-index: 10;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
-  max-width: 70vw;
+  max-width: 260px;
+  pointer-events: auto;
 }
-#controls #reset-btn{ grid-column: 1 / -1; justify-content: center; }
+#controls #undo-btn{ grid-column: 1 / -1; justify-content: center; }
 
 button.ctrl{
   font-family: var(--font-body);
@@ -354,8 +439,8 @@ body.mode-timeattack #reset-btn{ display: none; }
 button.ctrl svg{ width: 15px; height: 15px; }
 
 
-/* ---------- 일시정지 오버레이 ---------- */
-#pause-overlay{
+/* ---------- 시작 / 일시정지 메뉴 ---------- */
+#menu-overlay{
   position: absolute;
   inset: 0;
   z-index: 25;
@@ -368,33 +453,62 @@ button.ctrl svg{ width: 15px; height: 15px; }
   pointer-events: none;
   transition: opacity 0.3s ease;
 }
-#pause-overlay.show{ opacity: 1; pointer-events: auto; }
+#menu-overlay.show{ opacity: 1; pointer-events: auto; }
 
-.pause-card{
+.menu-card{
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 36px 40px;
+  min-width: 280px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+  transform: translateY(14px) scale(0.94);
+  transition: transform 0.4s cubic-bezier(.34,1.56,.64,1);
 }
-.pause-icon{
-  width: 46px;
-  height: 46px;
-  color: var(--accent);
-  margin-bottom: 4px;
-}
-.pause-title{
+#menu-overlay.show .menu-card{ transform: translateY(0) scale(1); }
+
+.menu-title{
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 26px;
+  font-size: 28px;
 }
-.pause-sub{
+.menu-sub{
   font-family: var(--font-mono);
   font-size: 12px;
   color: var(--muted);
   letter-spacing: 0.5px;
-  margin-bottom: 18px;
+  margin-bottom: 6px;
 }
+
+.menu-settings{
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  width: 100%;
+  transition: grid-template-rows 0.3s ease, opacity 0.25s ease;
+}
+.menu-settings-inner{ overflow: hidden; min-height: 0; display: flex; flex-direction: column; align-items: center; }
+.menu-settings.open{
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.menu-settings.open .menu-settings-inner{ margin-top: 6px; margin-bottom: 10px; }
+.menu-settings-label{
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.menu-primary-btn{ width: 100%; justify-content: center; margin-top: 10px; }
+.menu-settings-btn{ width: 100%; justify-content: center; }
 
 #win-overlay{
   position: absolute;
@@ -470,15 +584,27 @@ button.ctrl svg{ width: 15px; height: 15px; }
 }
 
 @media (max-width: 640px){
-  #console{ left: 14px; bottom: 14px; }
-  #controls{ right: 14px; bottom: 14px; max-width: 60vw; }
-  .readout{ min-width: 84px; padding: 8px 12px; }
-  .readout .value{ font-size: 17px; }
-  .readout.best .value{ font-size: 15px; }
-  button.ctrl{ padding: 10px 14px; font-size: 12px; }
+  #bottom-bar{ left: 14px; right: 14px; bottom: 14px; gap: 10px; }
+  .readout{ min-width: 78px; padding: 8px 10px; }
+  .readout .value{ font-size: 16px; }
+  .readout.best .value{ font-size: 14px; }
+  button.ctrl{ padding: 9px 12px; font-size: 12px; }
   button.ctrl span.label{ display: none; }
   header{ padding: 16px; }
   #mode-toggle{ top: 14px; padding: 3px; }
   .mode-btn{ padding: 7px 10px; font-size: 11px; }
   .mode-btn span{ display: none; }
+  #controls{ max-width: 190px; }
+}
+
+/* 좁은 화면(대부분의 휴대폰)에서는 기록/버튼을 좌우로 나누지 않고
+   위아래로 쌓아서 서로 겹치지 않게 한다 */
+@media (max-width: 480px){
+  #bottom-bar{
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  #console{ align-items: center; }
+  #controls{ width: 100%; max-width: 280px; }
 }

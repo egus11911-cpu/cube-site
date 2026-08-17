@@ -23,7 +23,19 @@
 
   const camera = new THREE.PerspectiveCamera(42, wrap.clientWidth / wrap.clientHeight, 0.1, 100);
 
-  let radius = 8.4;
+  // 화면 비율에 따라 큐브가 보이는 기본/최소/최대 거리(radius)를 다르게 잡는다.
+  // 세로로 긴 휴대폰 화면일수록 더 멀리서 보여줘서, 큐브가 화면을 꽉 채워
+  // 손가락으로 층을 정확히 집기 어려워지는 문제를 줄인다.
+  function computeRadiusBounds(){
+    const w = wrap.clientWidth, h = wrap.clientHeight;
+    const aspect = w / Math.max(h, 1);
+    if(aspect < 0.75)  return { min: 9,   max: 20, base: 13.5 }; // 세로로 긴 휴대폰
+    if(aspect < 1.05)  return { min: 7,   max: 16, base: 10.5 }; // 정사각형에 가까운 화면
+    return              { min: 5.5, max: 13, base: 8.4 };        // 데스크톱 / 가로로 넓은 화면
+  }
+
+  let radiusBounds = computeRadiusBounds();
+  let radius = radiusBounds.base;
   const camDir = new THREE.Vector3(0, 0, 1);
   const camUp = new THREE.Vector3(0, 1, 0);
   orthonormalizeCamera();
@@ -111,6 +123,12 @@
     camera.aspect = wrap.clientWidth / wrap.clientHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(wrap.clientWidth, wrap.clientHeight);
+
+    // 화면 방향이 바뀌거나(세로<->가로) 크기가 바뀌면 줌 범위를 다시 계산하고,
+    // 현재 값이 새 범위를 벗어나면 안쪽으로 당겨준다 (사용자가 준 줌은 최대한 유지).
+    radiusBounds = computeRadiusBounds();
+    radius = clamp(radius, radiusBounds.min, radiusBounds.max);
+    updateCameraPosition();
   });
 
   const cubies = [];
@@ -243,6 +261,13 @@
               // moveCount/HUD/기록 갱신은 undoMove()에서 직접 처리한다
               // (되돌리기가 "새 이동"으로 집계되지 않도록)
             } else {
+              if(solvedState){
+                // 완성된 뒤에도 계속 돌리는 경우: '완성 상태' 플래그를 풀어줘야
+                // (특히 놀이 모드에서) 일시정지 등이 계속 막히지 않는다.
+                solvedState = false;
+                document.getElementById('win-overlay').classList.remove('show');
+                startTimerIfNeeded();
+              }
               moveHistory.push({ axis, layer, dir });
               updateUndoButton();
               moveCount++;
@@ -295,6 +320,7 @@
 
   let currentMode = 'play'; // 'play' | 'timeattack'
   let isPaused = false;
+  let gameStarted = false; // 처음 "게임 시작"을 누르기 전까지는 조작을 막아둔다
   let bestTime = null; // ms, 타임어택 모드 전용 (세션 동안만 유지)
   let moveHistory = [];
 
@@ -341,7 +367,7 @@
   function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
 
   function onPointerDown(e){
-    if(animating || isPaused) return;
+    if(animating || isPaused || !gameStarted || activeTouchCount >= 2) return;
     setMouseNDC(e);
     raycaster.setFromCamera(mouseNDC, camera);
     const hits = raycaster.intersectObjects(cubies);
@@ -491,10 +517,54 @@
   window.addEventListener('pointercancel', onPointerUp);
 
   renderer.domElement.addEventListener('wheel', (e) => {
-    radius = clamp(radius + e.deltaY * 0.006, 5.5, 13);
+    radius = clamp(radius + e.deltaY * 0.006, radiusBounds.min, radiusBounds.max);
     updateCameraPosition();
     e.preventDefault();
   }, { passive:false });
+
+  // ---- 모바일 두 손가락 핀치 줌 ----
+  let pinchStartDist = null;
+  let pinchStartRadius = null;
+  let activeTouchCount = 0;
+
+  function touchDistance(touches){
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  wrap.addEventListener('touchstart', (e) => {
+    activeTouchCount = e.touches.length;
+    if(e.touches.length === 2){
+      // 손가락이 두 개가 되는 순간, 진행 중이던 한 손가락 드래그(층 회전/시점 회전)는 취소한다
+      dragMode = null;
+      pinchStartDist = touchDistance(e.touches);
+      pinchStartRadius = radius;
+    }
+  }, { passive: true });
+
+  wrap.addEventListener('touchmove', (e) => {
+    if(e.touches.length === 2 && pinchStartDist){
+      const dist = touchDistance(e.touches);
+      const scale = pinchStartDist / dist;
+      radius = clamp(pinchStartRadius * scale, radiusBounds.min, radiusBounds.max);
+      updateCameraPosition();
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  wrap.addEventListener('touchend', (e) => {
+    activeTouchCount = e.touches.length;
+    if(e.touches.length < 2){
+      pinchStartDist = null;
+      pinchStartRadius = null;
+    }
+  });
+  wrap.addEventListener('touchcancel', (e) => {
+    activeTouchCount = e.touches.length;
+    pinchStartDist = null;
+    pinchStartRadius = null;
+  });
 
   window.addEventListener('keydown', (e) => {
     if(e.repeat) return;
@@ -503,7 +573,7 @@
       togglePause();
       return;
     }
-    if(isPaused) return;
+    if(isPaused || !gameStarted) return;
     if(e.code === 'Space'){
       e.preventDefault();
       rollView(e.shiftKey ? -1 : 1);
@@ -564,9 +634,10 @@
 
   async function scrambleCube(){
     if(animating) return;
-    document.getElementById('win-overlay').classList.remove('show');
-    document.getElementById('pause-overlay').classList.remove('show');
+    gameStarted = true;
+    closeMenu();
     isPaused = false;
+    document.getElementById('win-overlay').classList.remove('show');
     document.getElementById('scramble-btn').disabled = true;
     document.getElementById('reset-btn').disabled = true;
     document.getElementById('undo-btn').disabled = true;
@@ -635,40 +706,81 @@
   }
 
   function togglePause(){
-    if(solvedState) return;
+    if(!gameStarted) return;
+    // 타임어택에서 완성 팝업이 떠 있는 동안에는 일시정지 메뉴를 겹쳐 띄우지 않는다
+    if(currentMode === 'timeattack' && solvedState) return;
+
     isPaused = !isPaused;
-    document.getElementById('pause-overlay').classList.toggle('show', isPaused);
     document.getElementById('scramble-btn').disabled = isPaused;
     document.getElementById('reset-btn').disabled = isPaused;
     updateUndoButton();
     updatePauseButton();
     if(isPaused){
       stopTimer();
+      openMenu('pause');
     } else {
+      closeMenu();
       startTimerIfNeeded();
     }
   }
 
+  function openMenu(context){
+    const titleEl = document.getElementById('menu-title');
+    const subEl = document.getElementById('menu-sub');
+    const primaryBtn = document.getElementById('menu-primary-btn');
+    if(context === 'pause'){
+      titleEl.textContent = '일시정지';
+      subEl.textContent = '이어서 플레이하거나 설정을 바꿔보세요';
+      primaryBtn.textContent = '계속하기';
+    } else {
+      titleEl.textContent = 'CUBEX';
+      subEl.textContent = '모드를 고르고 시작하세요';
+      primaryBtn.textContent = '게임 시작';
+    }
+    document.getElementById('menu-overlay').dataset.context = context;
+    document.getElementById('menu-overlay').classList.add('show');
+  }
+
+  function closeMenu(){
+    document.getElementById('menu-overlay').classList.remove('show');
+  }
+
   function setMode(mode){
-    if(mode === currentMode) return;
     currentMode = mode;
     document.body.classList.toggle('mode-timeattack', mode === 'timeattack');
     document.body.classList.toggle('mode-play', mode === 'play');
     document.getElementById('mode-play-btn').classList.toggle('active', mode === 'play');
     document.getElementById('mode-timeattack-btn').classList.toggle('active', mode === 'timeattack');
-    if(isPaused) togglePause();
     scrambleCube();
+  }
+
+  let helpVisible = false;
+  function toggleHelp(){
+    helpVisible = !helpVisible;
+    document.body.classList.toggle('show-help', helpVisible);
+    document.getElementById('help-btn').classList.toggle('active', helpVisible);
   }
 
   document.getElementById('scramble-btn').addEventListener('click', scrambleCube);
   document.getElementById('reset-btn').addEventListener('click', resetCube);
   document.getElementById('undo-btn').addEventListener('click', undoMove);
   document.getElementById('pause-btn').addEventListener('click', togglePause);
-  document.getElementById('resume-btn').addEventListener('click', togglePause);
   document.getElementById('mode-play-btn').addEventListener('click', () => setMode('play'));
   document.getElementById('mode-timeattack-btn').addEventListener('click', () => setMode('timeattack'));
-  document.getElementById('roll-ccw-btn').addEventListener('click', () => { if(!isPaused) rollView(-1); });
-  document.getElementById('roll-cw-btn').addEventListener('click', () => { if(!isPaused) rollView(1); });
+  document.getElementById('roll-ccw-btn').addEventListener('click', () => { if(gameStarted && !isPaused) rollView(-1); });
+  document.getElementById('roll-cw-btn').addEventListener('click', () => { if(gameStarted && !isPaused) rollView(1); });
+  document.getElementById('help-btn').addEventListener('click', toggleHelp);
+  document.getElementById('menu-primary-btn').addEventListener('click', () => {
+    const ctx = document.getElementById('menu-overlay').dataset.context;
+    if(ctx === 'pause'){
+      togglePause(); // isPaused가 true인 상태이므로 이어하기로 동작한다
+    } else {
+      scrambleCube(); // 처음 시작 (닫기 + 셔플까지 scrambleCube 안에서 처리)
+    }
+  });
+  document.getElementById('menu-settings-btn').addEventListener('click', () => {
+    document.getElementById('menu-settings').classList.toggle('open');
+  });
   document.getElementById('win-again-btn').addEventListener('click', () => {
     document.getElementById('win-overlay').classList.remove('show');
     scrambleCube();
@@ -682,5 +794,5 @@
 
   document.getElementById('moves-value').textContent = '0';
   updateTimerDisplay();
-  setTimeout(scrambleCube, 400);
+  openMenu('start'); // 처음엔 자동으로 섞지 않고, "게임 시작"을 누를 때까지 시작 메뉴를 보여준다
 })();
